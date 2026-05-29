@@ -174,6 +174,9 @@ export default function Home() {
           </div>
         ) : (
           recalls.map((recall, index) => {
+            const analysis = analyzeRecall(
+            recall["Recall Description"] || ""
+            );
             const isSelected =
               selectedRecall?.id === recall.id;
 
