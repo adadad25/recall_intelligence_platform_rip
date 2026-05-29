@@ -9,7 +9,7 @@ type Recall = {
   Component: string;
   "Recall Description": string;
   "Report Received Date": string;
-  "NHTSA Campaign Number": string;
+  link?: string;
 };
 
 export default function Home() {
@@ -242,12 +242,10 @@ export default function Home() {
 
                   {/* NHTSA LINK */}
 
-                  {recall[
-                    "NHTSA Campaign Number"
-                  ] && (
-                    <div>
+                  {recall.link && (
+                    <div style={{ marginTop: 12 }}>
                       <a
-                        href={`https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA Campaign Number"]}`}
+                        href={recall.link}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) =>
@@ -262,21 +260,6 @@ export default function Home() {
                       >
                         View Official NHTSA Recall →
                       </a>
-
-                      <p
-                        style={{
-                          marginTop: 8,
-                          color: "#666",
-                          fontSize: 14,
-                        }}
-                      >
-                        Campaign #:{" "}
-                        {
-                          recall[
-                            "NHTSA Campaign Number"
-                          ]
-                        }
-                      </p>
                     </div>
                   )}
                 </div>
@@ -341,6 +324,7 @@ export default function Home() {
                         background: "#f3f4f6",
                         padding: 20,
                         borderRadius: 12,
+                        marginBottom: 20,
                       }}
                     >
                       <h4
@@ -363,6 +347,24 @@ export default function Home() {
                         }
                       </p>
                     </div>
+
+                    {/* DETAIL PAGE LINK */}
+
+                    {recall.link && (
+                      <a
+                        href={recall.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#2563eb",
+                          fontWeight: "bold",
+                          textDecoration:
+                            "none",
+                        }}
+                      >
+                        Open Official NHTSA Report →
+                      </a>
+                    )}
                   </div>
                 )}
               </div>
