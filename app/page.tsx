@@ -3,34 +3,48 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
-type Recall = {
-  Manufacturer?: string;
-  Subject?: string;
-  Component?: string;
-  "Recall Description"?: string;
-  link?: string;
-  [key: string]: any;
-};
-
 export default function Home() {
-  const [recalls, setRecalls] = useState<Recall[]>([]);
+  const [recalls, setRecalls] = useState([]);
   const [search, setSearch] = useState("");
-  const [loadingRecalls, setLoadingRecalls] =
-    useState(false);
+
+  const [selectedRecall, setSelectedRecall] = useState(null);
+  const [page, setPage] = useState(1);
+
+  const [aiAnalysis, setAiAnalysis] = useState("");
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [loadingRecalls, setLoadingRecalls] = useState(false);
 
   useEffect(() => {
-    fetchRecalls();
-  }, []);
+    fetchRecalls(search, page);
+  }, [page]);
 
-  async function fetchRecalls() {
+  async function fetchRecalls(searchTerm = "", page = 1) {
     setLoadingRecalls(true);
+    setRecalls([]);
 
-    const { data, error } = await supabase
+    const PAGE_SIZE = 100;
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    let query = supabase
       .from("recalls")
-      .select("*")
-      .limit(20);
+      .select(`
+        Manufacturer,
+        Subject,
+        Component,
+        "Recall Description",
+        "Report Received Date",
+        "NHTSA Campaign Number"
+      `)
+      .range(from, to);
 
-    console.log("SUPABASE DATA:", data);
+    if (searchTerm) {
+      query = query.or(
+        `Manufacturer.ilike.%${searchTerm}%,Component.ilike.%${searchTerm}%,Subject.ilike.%${searchTerm}%`
+      );
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error(error);
@@ -42,23 +56,45 @@ export default function Home() {
     setLoadingRecalls(false);
   }
 
-  function handleSearch(
-    e: React.ChangeEvent<HTMLInputElement>
-  ) {
-    setSearch(e.target.value);
+  async function analyzeRecall(recall) {
+    try {
+      setLoadingAI(true);
+      setAiAnalysis("");
+
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ recall }),
+      });
+
+      if (!response.ok) {
+        throw new Error("AI request failed");
+      }
+
+      const data = await response.json();
+
+      setAiAnalysis(data.result);
+    } catch (err) {
+      console.error(err);
+
+      setAiAnalysis(
+        "Unable to generate AI analysis at this time."
+      );
+    } finally {
+      setLoadingAI(false);
+    }
   }
 
-  const filteredRecalls = recalls.filter((recall) => {
-    const q = search.toLowerCase();
+  function handleSearch(e) {
+    const value = e.target.value;
 
-    return (
-      recall.Manufacturer
-        ?.toLowerCase()
-        .includes(q) ||
-      recall.Subject?.toLowerCase().includes(q) ||
-      recall.Component?.toLowerCase().includes(q)
-    );
-  });
+    setSearch(value);
+    setPage(1);
+
+    fetchRecalls(value, 1);
+  }
 
   return (
     <div
@@ -69,6 +105,8 @@ export default function Home() {
         fontFamily: "Arial",
       }}
     >
+      {/* HEADER */}
+
       <h1
         style={{
           fontSize: 42,
@@ -85,79 +123,389 @@ export default function Home() {
           marginBottom: 30,
         }}
       >
-        Every Failure has some lessons to learn
+        Enterprise Recall Analytics & Root Cause Intelligence
       </p>
 
-      <input
-        type="text"
-        placeholder="Search recalls..."
-        value={search}
-        onChange={handleSearch}
-        style={{
-          width: "100%",
-          padding: 16,
-          borderRadius: 12,
-          border: "1px solid #ccc",
-          marginBottom: 30,
-          fontSize: 16,
-        }}
-      />
+      {/* SEARCH BAR */}
 
-      {loadingRecalls ? (
-        <p>Loading recalls...</p>
-      ) : (
-        <div
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          marginBottom: 40,
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Search OEM, Component, Subject..."
+          value={search}
+          onChange={handleSearch}
           style={{
-            display: "grid",
-            gap: 20,
+            flex: 1,
+            padding: 16,
+            borderRadius: 12,
+            border: "1px solid #ccc",
+            fontSize: 16,
+          }}
+        />
+
+        <button
+          onClick={() => {
+            setSearch("");
+            setPage(1);
+            setSelectedRecall(null);
+            setAiAnalysis("");
+            fetchRecalls("", 1);
+          }}
+          style={{
+            padding: "0 20px",
+            borderRadius: 12,
+            border: "none",
+            background: "#dc2626",
+            color: "white",
+            fontWeight: "bold",
+            cursor: "pointer",
           }}
         >
-          {filteredRecalls.map((recall, index) => (
-            <div
-              key={index}
-              style={{
-                background: "white",
-                padding: 24,
-                borderRadius: 14,
-                boxShadow:
-                  "0 2px 8px rgba(0,0,0,0.08)",
-              }}
-            >
-              <h2>{recall.Manufacturer}</h2>
+          Clear
+        </button>
+      </div>
 
-              <p>{recall.Subject}</p>
+      {/* RECALL LIST */}
 
-              <div
-                style={{
-                  display: "inline-block",
-                  padding: "6px 12px",
-                  background: "#eef2ff",
-                  borderRadius: 8,
-                  marginTop: 10,
-                }}
-              >
-                {recall.Component}
+      <div
+        style={{
+          display: "grid",
+          gap: 20,
+        }}
+      >
+        {loadingRecalls ? (
+          <div
+            style={{
+              background: "white",
+              padding: 30,
+              borderRadius: 16,
+              textAlign: "center",
+              fontSize: 18,
+            }}
+          >
+            Loading recalls...
+          </div>
+        ) : (
+          recalls.map((recall, index) => {
+            const isSelected =
+              selectedRecall?.Subject === recall.Subject &&
+              selectedRecall?.Manufacturer ===
+                recall.Manufacturer;
+
+            return (
+              <div key={index}>
+                {/* RECALL CARD */}
+
+                <div
+                  onClick={async () => {
+                    if (isSelected) {
+                      setSelectedRecall(null);
+                      return;
+                    }
+
+                    setSelectedRecall(recall);
+
+                    setAiAnalysis(
+                      "Analyzing recall with AI..."
+                    );
+
+                    await analyzeRecall(recall);
+                  }}
+                  style={{
+                    background: "white",
+                    padding: 24,
+                    borderRadius: 14,
+                    cursor: "pointer",
+                    boxShadow:
+                      "0 2px 8px rgba(0,0,0,0.08)",
+                    border: isSelected
+                      ? "2px solid #2563eb"
+                      : "none",
+                  }}
+                >
+                  {/* MANUFACTURER */}
+
+                  <h2 style={{ marginBottom: 10 }}>
+                    {recall.Manufacturer}
+                  </h2>
+
+                  {/* SUBJECT */}
+
+                  <p
+                    style={{
+                      fontSize: 18,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {recall.Subject}
+                  </p>
+
+                  {/* COMPONENT */}
+
+                  <div
+                    style={{
+                      display: "inline-block",
+                      padding: "6px 12px",
+                      background: "#eef2ff",
+                      borderRadius: 8,
+                      marginBottom: 12,
+                    }}
+                  >
+                    {recall.Component}
+                  </div>
+
+                  {/* NHTSA LINK */}
+
+                  <div style={{ marginTop: 10 }}>
+                    <a
+                      href={`https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA Campaign Number"]}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: "#2563eb",
+                        fontWeight: "bold",
+                        textDecoration: "none",
+                      }}
+                    >
+                      View Official NHTSA Recall →
+                    </a>
+
+                    <p
+                      style={{
+                        marginTop: 8,
+                        color: "#666",
+                        fontSize: 14,
+                      }}
+                    >
+                      Campaign #:{" "}
+                      {
+                        recall[
+                          "NHTSA Campaign Number"
+                        ]
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                {/* INLINE AI PANEL */}
+
+                {isSelected && (
+                  <div
+                    style={{
+                      background: "white",
+                      padding: 30,
+                      borderRadius: 20,
+                      marginTop: 15,
+                      boxShadow:
+                        "0 4px 12px rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    <h2
+                      style={{
+                        fontSize: 30,
+                        marginBottom: 20,
+                      }}
+                    >
+                      AI Recall Intelligence
+                    </h2>
+
+                    <h3 style={{ marginBottom: 10 }}>
+                      {selectedRecall.Subject}
+                    </h3>
+
+                    <p style={{ marginBottom: 20 }}>
+                      <strong>Manufacturer:</strong>{" "}
+                      {selectedRecall.Manufacturer}
+                    </p>
+
+                    <p
+                      style={{
+                        color: "#666",
+                        marginBottom: 20,
+                      }}
+                    >
+                      Report Date:{" "}
+                      {
+                        selectedRecall[
+                          "Report Received Date"
+                        ]
+                      }
+                    </p>
+
+                    {/* DESCRIPTION */}
+
+                    <div
+                      style={{
+                        background: "#f3f4f6",
+                        padding: 20,
+                        borderRadius: 12,
+                        marginBottom: 20,
+                      }}
+                    >
+                      <h4 style={{ marginBottom: 10 }}>
+                        Recall Description
+                      </h4>
+
+                      <p>
+                        {
+                          selectedRecall[
+                            "Recall Description"
+                          ]
+                        }
+                      </p>
+                    </div>
+
+                    {/* AI ANALYSIS */}
+
+                    <div
+                      style={{
+                        background: "#eff6ff",
+                        padding: 20,
+                        borderRadius: 12,
+                        marginBottom: 20,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      <h4 style={{ marginBottom: 10 }}>
+                        AI Intelligence Analysis
+                      </h4>
+
+                      {loadingAI ? (
+                        <p>
+                          Generating AI analysis...
+                        </p>
+                      ) : (
+                        <p>{aiAnalysis}</p>
+                      )}
+                    </div>
+
+                    {/* ROOT CAUSE */}
+
+                    <div
+                      style={{
+                        background: "#dbeafe",
+                        padding: 20,
+                        borderRadius: 12,
+                        marginBottom: 20,
+                      }}
+                    >
+                      <h4 style={{ marginBottom: 10 }}>
+                        AI Root Cause Assessment
+                      </h4>
+
+                      <p>
+                        This recall likely originated
+                        from a failure within the{" "}
+                        <strong>
+                          {selectedRecall.Component}
+                        </strong>{" "}
+                        system, potentially creating
+                        elevated operational and
+                        safety risks.
+                      </p>
+                    </div>
+
+                    {/* ENGINEERING */}
+
+                    <div
+                      style={{
+                        background: "#fef3c7",
+                        padding: 20,
+                        borderRadius: 12,
+                      }}
+                    >
+                      <h4 style={{ marginBottom: 10 }}>
+                        Engineering Risk Insight
+                      </h4>
+
+                      <p>
+                        Similar recalls are commonly
+                        associated with supplier
+                        quality variation, validation
+                        gaps, thermal stress, or
+                        manufacturing process
+                        deviations.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
+            );
+          })
+        )}
+      </div>
 
-              {/* DEBUG ALL FIELDS */}
+      {/* PAGINATION */}
 
-              <pre
-                style={{
-                  marginTop: 20,
-                  background: "#111",
-                  color: "#0f0",
-                  padding: 10,
-                  borderRadius: 8,
-                  overflow: "auto",
-                  fontSize: 12,
-                }}
-              >
-                {JSON.stringify(recall, null, 2)}
-              </pre>
-            </div>
-          ))}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          gap: 20,
+          marginTop: 40,
+          marginBottom: 60,
+        }}
+      >
+        <button
+          onClick={() => {
+            if (page > 1) {
+              const newPage = page - 1;
+
+              setPage(newPage);
+              setSelectedRecall(null);
+
+              fetchRecalls(search, newPage);
+            }
+          }}
+          style={{
+            padding: "12px 20px",
+            borderRadius: 10,
+            border: "none",
+            background: "#2563eb",
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
+          Previous
+        </button>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            fontWeight: "bold",
+          }}
+        >
+          Page {page}
         </div>
-      )}
+
+        <button
+          onClick={() => {
+            const newPage = page + 1;
+
+            setPage(newPage);
+            setSelectedRecall(null);
+
+            fetchRecalls(search, newPage);
+          }}
+          style={{
+            padding: "12px 20px",
+            borderRadius: 10,
+            border: "none",
+            background: "#2563eb",
+            color: "white",
+            cursor: "pointer",
+          }}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }
