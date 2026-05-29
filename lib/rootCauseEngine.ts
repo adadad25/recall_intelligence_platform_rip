@@ -1,159 +1,243 @@
+import nlp from "compromise";
 
 export function analyzeRecall(description: string) {
   const text = description.toLowerCase();
 
-  let system = "Unknown System";
+  let system = "General Vehicle System";
   let failureMode = "Unknown Failure Mode";
   let safetyRisk = "Unknown Safety Risk";
 
   let potentialCauses: string[] = [];
 
-  // =========================
-  // SYSTEM DETECTION
-  // =========================
+  /* =========================
+     SYSTEM DETECTION
+  ========================= */
 
   if (
     text.includes("brake") ||
-    text.includes("hydraulic")
+    text.includes("abs")
   ) {
-    system = "Brake Hydraulic System";
+    system = "Brake System";
   }
 
-  if (
-    text.includes("battery") ||
-    text.includes("charging")
-  ) {
-    system = "High Voltage Battery System";
-  }
-
-  if (
-    text.includes("airbag") ||
-    text.includes("inflator")
-  ) {
-    system = "Airbag Restraint System";
-  }
-
-  if (
+  else if (
     text.includes("steering")
   ) {
     system = "Steering System";
   }
 
-  if (
+  else if (
+    text.includes("air bag") ||
+    text.includes("airbag")
+  ) {
+    system = "Airbag System";
+  }
+
+  else if (
+    text.includes("battery") ||
+    text.includes("electrical")
+  ) {
+    system = "Electrical System";
+  }
+
+  else if (
     text.includes("fuel")
   ) {
-    system = "Fuel Delivery System";
+    system = "Fuel System";
   }
 
-  if (
-    text.includes("electrical") ||
-    text.includes("wiring")
+  else if (
+    text.includes("engine")
   ) {
-    system = "Electrical Distribution System";
+    system = "Engine System";
   }
 
-  // =========================
-  // FAILURE MODE
-  // =========================
+  else if (
+    text.includes("transmission")
+  ) {
+    system = "Transmission System";
+  }
+
+  else if (
+    text.includes("tire")
+  ) {
+    system = "Tire System";
+  }
+
+  else if (
+    text.includes("seat belt")
+  ) {
+    system = "Seat Belt System";
+  }
+
+  else if (
+    text.includes("camera")
+  ) {
+    system = "Driver Assistance System";
+  }
+
+  /* =========================
+     FAILURE MODE DETECTION
+  ========================= */
 
   if (
+    text.includes("fire") ||
+    text.includes("burn")
+  ) {
+    failureMode = "Thermal Event / Fire";
+  }
+
+  else if (
     text.includes("leak")
   ) {
     failureMode = "Fluid Leakage";
   }
 
-  if (
-    text.includes("overheat") ||
-    text.includes("thermal")
-  ) {
-    failureMode = "Thermal Overheating";
-  }
-
-  if (
-    text.includes("short circuit") ||
-    text.includes("electrical short")
-  ) {
-    failureMode = "Electrical Short Circuit";
-  }
-
-  if (
-    text.includes("crack") ||
-    text.includes("fracture")
+  else if (
+    text.includes("fracture") ||
+    text.includes("crack")
   ) {
     failureMode = "Structural Fracture";
   }
 
-  if (
+  else if (
+    text.includes("detach")
+  ) {
+    failureMode = "Component Detachment";
+  }
+
+  else if (
+    text.includes("loss of braking")
+  ) {
+    failureMode = "Brake Performance Loss";
+  }
+
+  else if (
+    text.includes("stall")
+  ) {
+    failureMode = "Engine Stall";
+  }
+
+  else if (
+    text.includes("short circuit")
+  ) {
+    failureMode = "Electrical Short Circuit";
+  }
+
+  else if (
+    text.includes("overheat")
+  ) {
+    failureMode = "Thermal Overheating";
+  }
+
+  else if (
+    text.includes("loss of steering")
+  ) {
+    failureMode = "Steering Control Loss";
+  }
+
+  else if (
+    text.includes("incorrect deployment")
+  ) {
+    failureMode = "Improper Airbag Deployment";
+  }
+
+  else if (
     text.includes("software")
   ) {
-    failureMode = "Software Logic Failure";
+    failureMode = "Software Logic Defect";
   }
 
-  if (
-    text.includes("corrosion")
-  ) {
-    failureMode = "Corrosion Degradation";
-  }
-
-  // =========================
-  // SAFETY RISK
-  // =========================
-
-  if (
-    text.includes("fire")
-  ) {
-    safetyRisk = "Vehicle Fire Hazard";
-  }
+  /* =========================
+     SAFETY RISK DETECTION
+  ========================= */
 
   if (
     text.includes("crash")
   ) {
-    safetyRisk = "Crash Risk";
+    safetyRisk = "Vehicle Crash Risk";
   }
 
-  if (
-    text.includes("reduced braking") ||
-    text.includes("brake")
+  else if (
+    text.includes("injury")
   ) {
-    safetyRisk = "Loss of Braking Capability";
+    safetyRisk = "Occupant Injury Risk";
   }
 
-  if (
+  else if (
+    text.includes("fire")
+  ) {
+    safetyRisk = "Vehicle Fire Risk";
+  }
+
+  else if (
+    text.includes("loss of braking")
+  ) {
+    safetyRisk = "Loss of Vehicle Braking";
+  }
+
+  else if (
     text.includes("loss of steering")
   ) {
-    safetyRisk = "Loss of Steering Control";
+    safetyRisk = "Loss of Vehicle Control";
   }
 
-  if (
-    text.includes("airbag") &&
-    text.includes("fail")
+  else if (
+    text.includes("air bag fails")
   ) {
-    safetyRisk = "Occupant Protection Failure";
+    safetyRisk = "Reduced Crash Protection";
   }
 
-  // =========================
-  // ENGINEERING CAUSES
-  // =========================
+  else if (
+    text.includes("rollaway")
+  ) {
+    safetyRisk = "Unintended Vehicle Movement";
+  }
+
+  else if (
+    text.includes("visibility")
+  ) {
+    safetyRisk = "Reduced Driver Visibility";
+  }
+
+  else if (
+    text.includes("stall")
+  ) {
+    safetyRisk = "Loss of Propulsion";
+  }
+
+  /* =========================
+     ENGINEERING CAUSES
+  ========================= */
 
   if (
     text.includes("leak")
   ) {
     potentialCauses.push(
-      "Seal material degradation",
-      "Hydraulic pressure fatigue",
-      "Manufacturing tolerance variation",
-      "Supplier component defect"
+      "Seal degradation",
+      "Improper joint sealing",
+      "Pressure fatigue failure"
     );
   }
 
   if (
-    text.includes("overheat")
+    text.includes("fire")
   ) {
     potentialCauses.push(
-      "Thermal management deficiency",
-      "Cooling pathway restriction",
-      "Battery cell instability",
-      "Excessive heat cycling"
+      "Thermal runaway",
+      "Electrical insulation failure",
+      "Combustible material exposure"
+    );
+  }
+
+  if (
+    text.includes("fracture") ||
+    text.includes("crack")
+  ) {
+    potentialCauses.push(
+      "Material fatigue",
+      "Stress concentration",
+      "Manufacturing defect"
     );
   }
 
@@ -161,43 +245,39 @@ export function analyzeRecall(description: string) {
     text.includes("software")
   ) {
     potentialCauses.push(
-      "Firmware logic defect",
-      "Control module validation gap",
-      "Sensor input misinterpretation",
-      "State transition failure"
+      "Software validation gap",
+      "Logic condition failure",
+      "Calibration defect"
     );
   }
 
   if (
-    text.includes("crack")
+    text.includes("short circuit")
   ) {
     potentialCauses.push(
-      "Fatigue stress accumulation",
-      "Material brittleness",
-      "Improper heat treatment",
-      "Structural load concentration"
+      "Wire insulation damage",
+      "Connector contamination",
+      "Electrical overload"
     );
   }
 
   if (
-    text.includes("corrosion")
+    text.includes("detach")
   ) {
     potentialCauses.push(
-      "Moisture intrusion",
-      "Protective coating degradation",
-      "Galvanic corrosion reaction",
-      "Environmental exposure cycling"
+      "Fastener torque loss",
+      "Improper assembly",
+      "Vibration fatigue"
     );
   }
 
-  // fallback
-
-  if (potentialCauses.length === 0) {
+  if (
+    potentialCauses.length === 0
+  ) {
     potentialCauses.push(
       "Supplier manufacturing variation",
-      "Design validation gap",
-      "Environmental stress exposure",
-      "Assembly process deviation"
+      "Environmental degradation",
+      "Design robustness gap"
     );
   }
 
