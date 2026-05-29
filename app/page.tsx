@@ -83,15 +83,16 @@ export default function Home() {
         Recall Intelligence Platform
       </h1>
 
-      <p
-        style={{
-          color: "#666",
-          marginBottom: 30,
-        }}
-      >
-        Enterprise Recall Analytics &
-        Root Cause Intelligence
-      </p>
+     <p
+  style={{
+    color: "#666",
+    marginBottom: 30,
+    fontSize: 18,
+    fontStyle: "italic",
+  }}
+>
+  Every Failure has some lessons to learn
+</p>
 
       {/* SEARCH */}
 
