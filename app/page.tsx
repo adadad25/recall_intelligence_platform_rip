@@ -4,16 +4,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 export default function Home() {
-  const [recalls, setRecalls] = useState([]);
+  const [recalls, setRecalls] = useState<any[]>([]);
   const [search, setSearch] = useState("");
 
-  const [selectedRecall, setSelectedRecall] =
-    useState(null);
+  const [selectedRecall, setSelectedRecall] = useState<any | null>(null);
 
-  const [page, setPage] = useState(1);
+   const [page, setPage] = useState(1);
 
-  const [loadingRecalls, setLoadingRecalls] =
-    useState(false);
+    const [loadingRecalls, setLoadingRecalls] =  useState(false);
 
   useEffect(() => {
     fetchRecalls(search, page);
