@@ -41,14 +41,7 @@ export default function Home() {
 
     let query = supabase
       .from("recalls")
-      .select(`
-        Manufacturer,
-        Subject,
-        Component,
-        "Recall Description",
-        "Report Received Date",
-        "NHTSA Campaign Number"
-      `)
+      .select("*")
       .range(from, to);
 
     if (searchTerm) {
@@ -58,6 +51,9 @@ export default function Home() {
     }
 
     const { data, error } = await query;
+
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
     if (error) {
       console.error(error);
@@ -209,6 +205,8 @@ export default function Home() {
                       : "none",
                   }}
                 >
+                  {/* MANUFACTURER */}
+
                   <h2
                     style={{
                       marginBottom: 10,
@@ -216,6 +214,8 @@ export default function Home() {
                   >
                     {recall.Manufacturer}
                   </h2>
+
+                  {/* SUBJECT */}
 
                   <p
                     style={{
@@ -225,6 +225,8 @@ export default function Home() {
                   >
                     {recall.Subject}
                   </p>
+
+                  {/* COMPONENT */}
 
                   <div
                     style={{
@@ -331,6 +333,8 @@ export default function Home() {
                         ]
                       }
                     </p>
+
+                    {/* DESCRIPTION */}
 
                     <div
                       style={{
