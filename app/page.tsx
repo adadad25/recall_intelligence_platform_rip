@@ -6,12 +6,9 @@ import { supabase } from "../lib/supabase";
 export default function Home() {
   const [recalls, setRecalls] = useState<any[]>([]);
   const [search, setSearch] = useState("");
-
   const [selectedRecall, setSelectedRecall] = useState<any | null>(null);
-
-   const [page, setPage] = useState(1);
-
-    const [loadingRecalls, setLoadingRecalls] =  useState(false);
+  const [page, setPage] = useState(1);
+  const [loadingRecalls, setLoadingRecalls] =  useState(false);
 
   useEffect(() => {
     fetchRecalls(search, page);
