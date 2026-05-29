@@ -1,7 +1,8 @@
 "use client";
-import { analyzeRecall } from "../lib/rootCauseEngine";
+
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { analyzeRecall } from "../lib/rootCauseEngine";
 
 export default function Home() {
   const [recalls, setRecalls] = useState<any[]>([]);
@@ -92,6 +93,7 @@ export default function Home() {
         style={{
           color: "#666",
           marginBottom: 30,
+          fontSize: 18,
         }}
       >
         Every Failure has some lessons to learn
@@ -174,19 +176,12 @@ export default function Home() {
           </div>
         ) : (
           recalls.map((recall, index) => {
-            const analysis = analyzeRecall(
-            recall["Recall Description"] || ""
-            );
             const isSelected =
               selectedRecall?.id === recall.id;
 
-            const nhtsaLink =
-              recall["NHTSA Link"] ||
-              (recall["NHTSA ID"]
-                ? `https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA ID"]}`
-                : recall["NHTSA Campaign Number"]
-                ? `https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA Campaign Number"]}`
-                : null);
+            const analysis = analyzeRecall(
+              recall["Recall Description"] || ""
+            );
 
             return (
               <div key={index}>
@@ -249,19 +244,16 @@ export default function Home() {
 
                   {/* NHTSA LINK */}
 
-                  {nhtsaLink && (
+                  {recall["NHTSA ID"] && (
                     <div
                       style={{
                         marginTop: 12,
                       }}
                     >
                       <a
-                        href={nhtsaLink}
+                        href={`https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA ID"]}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={(e) =>
-                          e.stopPropagation()
-                        }
                         style={{
                           color: "#2563eb",
                           fontWeight: "bold",
@@ -270,6 +262,17 @@ export default function Home() {
                       >
                         View Official NHTSA Recall →
                       </a>
+
+                      <div
+                        style={{
+                          marginTop: 6,
+                          color: "#666",
+                          fontSize: 14,
+                        }}
+                      >
+                        NHTSA ID:{" "}
+                        {recall["NHTSA ID"]}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -358,30 +361,87 @@ export default function Home() {
                       </p>
                     </div>
 
-                    {/* NHTSA BUTTON */}
+                    {/* ROOT CAUSE INTELLIGENCE */}
 
-                    {nhtsaLink && (
-                      <a
-                        href={nhtsaLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <div
+                      style={{
+                        background: "#eff6ff",
+                        padding: 24,
+                        borderRadius: 16,
+                        marginTop: 20,
+                      }}
+                    >
+                      <h3
                         style={{
-                          display: "inline-block",
-                          marginTop: 10,
-                          padding:
-                            "12px 18px",
-                          background:
-                            "#2563eb",
-                          color: "white",
-                          borderRadius: 10,
-                          textDecoration:
-                            "none",
-                          fontWeight: "bold",
+                          marginBottom: 20,
+                          fontSize: 24,
+                          color: "#1e3a8a",
                         }}
                       >
-                        Open Official NHTSA Page
-                      </a>
-                    )}
+                        Root Cause Intelligence
+                      </h3>
+
+                      <div
+                        style={{
+                          marginBottom: 16,
+                        }}
+                      >
+                        <strong>System:</strong>{" "}
+                        {analysis.system}
+                      </div>
+
+                      <div
+                        style={{
+                          marginBottom: 16,
+                        }}
+                      >
+                        <strong>
+                          Failure Mode:
+                        </strong>{" "}
+                        {analysis.failureMode}
+                      </div>
+
+                      <div
+                        style={{
+                          marginBottom: 16,
+                        }}
+                      >
+                        <strong>
+                          Safety Risk:
+                        </strong>{" "}
+                        {analysis.safetyRisk}
+                      </div>
+
+                      <div>
+                        <strong>
+                          Potential Engineering
+                          Causes:
+                        </strong>
+
+                        <ul
+                          style={{
+                            marginTop: 10,
+                            paddingLeft: 20,
+                          }}
+                        >
+                          {analysis.potentialCauses.map(
+                            (
+                              cause: string,
+                              idx: number
+                            ) => (
+                              <li
+                                key={idx}
+                                style={{
+                                  marginBottom: 8,
+                                }}
+                              >
+                                {cause}
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
