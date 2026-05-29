@@ -33,7 +33,6 @@ export default function Home() {
     page = 1
   ) {
     setLoadingRecalls(true);
-    setRecalls([]);
 
     const PAGE_SIZE = 100;
 
@@ -241,35 +240,43 @@ export default function Home() {
 
                   {/* NHTSA LINK */}
 
-                  <div>
-                    <a
-                      href={`https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA Campaign Number"]}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        color: "#2563eb",
-                        fontWeight: "bold",
-                        textDecoration: "none",
-                      }}
-                    >
-                      View Official NHTSA Recall →
-                    </a>
+                  {recall[
+                    "NHTSA Campaign Number"
+                  ] && (
+                    <div>
+                      <a
+                        href={`https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA Campaign Number"]}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) =>
+                          e.stopPropagation()
+                        }
+                        style={{
+                          color: "#2563eb",
+                          fontWeight: "bold",
+                          textDecoration:
+                            "none",
+                        }}
+                      >
+                        View Official NHTSA Recall →
+                      </a>
 
-                    <p
-                      style={{
-                        marginTop: 8,
-                        color: "#666",
-                        fontSize: 14,
-                      }}
-                    >
-                      Campaign #:{" "}
-                      {
-                        recall[
-                          "NHTSA Campaign Number"
-                        ]
-                      }
-                    </p>
-                  </div>
+                      <p
+                        style={{
+                          marginTop: 8,
+                          color: "#666",
+                          fontSize: 14,
+                        }}
+                      >
+                        Campaign #:{" "}
+                        {
+                          recall[
+                            "NHTSA Campaign Number"
+                          ]
+                        }
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* DETAILS PANEL */}
@@ -325,14 +332,11 @@ export default function Home() {
                       }
                     </p>
 
-                    {/* DESCRIPTION */}
-
                     <div
                       style={{
                         background: "#f3f4f6",
                         padding: 20,
                         borderRadius: 12,
-                        marginBottom: 20,
                       }}
                     >
                       <h4
@@ -353,28 +357,6 @@ export default function Home() {
                             "Recall Description"
                           ]
                         }
-                      </p>
-                    </div>
-
-                    {/* COMPONENT */}
-
-                    <div
-                      style={{
-                        background: "#eef2ff",
-                        padding: 20,
-                        borderRadius: 12,
-                      }}
-                    >
-                      <h4
-                        style={{
-                          marginBottom: 10,
-                        }}
-                      >
-                        Affected Component
-                      </h4>
-
-                      <p>
-                        {recall.Component}
                       </p>
                     </div>
                   </div>
