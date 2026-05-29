@@ -79,29 +79,72 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div
+      style={{
+        background: "#f3f4f6",
+        minHeight: "100vh",
+        paddingBottom: 60,
+        fontFamily: "Arial",
+      }}
+    >
       {/* HEADER */}
 
-      <div className="bg-white border-b sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <h1 className="text-4xl font-bold text-gray-900">
+      <div
+        style={{
+          background: "white",
+          padding: 30,
+          borderBottom: "1px solid #ddd",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: 48,
+              fontWeight: "bold",
+              marginBottom: 10,
+            }}
+          >
             Recall Intelligence Platform
           </h1>
 
-          <p className="text-gray-500 mt-2 text-lg">
-            Every Failure has some lessons to
-            learn
+          <p
+            style={{
+              color: "#666",
+              fontSize: 20,
+              marginBottom: 25,
+            }}
+          >
+            Every Failure has some lessons to learn
           </p>
 
           {/* SEARCH */}
 
-          <div className="flex gap-3 mt-6">
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+            }}
+          >
             <input
               type="text"
               placeholder="Search OEM, Component, Subject..."
               value={search}
               onChange={handleSearch}
-              className="flex-1 p-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{
+                flex: 1,
+                padding: 16,
+                borderRadius: 12,
+                border: "1px solid #ccc",
+                fontSize: 16,
+              }}
             />
 
             <button
@@ -111,7 +154,15 @@ export default function Home() {
                 setSelectedRecall(null);
                 fetchRecalls("", 1);
               }}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 rounded-xl font-semibold transition"
+              style={{
+                background: "#dc2626",
+                color: "white",
+                border: "none",
+                borderRadius: 12,
+                padding: "0 24px",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
             >
               Clear
             </button>
@@ -121,186 +172,193 @@ export default function Home() {
 
       {/* CONTENT */}
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* LOADING */}
-
-        {loadingRecalls && (
-          <div className="bg-white rounded-2xl p-10 text-center shadow-sm">
-            <div className="text-xl font-semibold text-gray-700">
-              Loading recalls...
-            </div>
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: "30px auto",
+          padding: "0 20px",
+        }}
+      >
+        {loadingRecalls ? (
+          <div
+            style={{
+              background: "white",
+              padding: 40,
+              borderRadius: 20,
+              textAlign: "center",
+              fontSize: 20,
+              boxShadow:
+                "0 4px 12px rgba(0,0,0,0.08)",
+            }}
+          >
+            Loading recalls...
           </div>
-        )}
+        ) : (
+          recalls.map((recall, index) => {
+            const isSelected =
+              selectedRecall?.Subject ===
+                recall.Subject &&
+              selectedRecall?.Manufacturer ===
+                recall.Manufacturer;
 
-        {/* RESULTS */}
+            return (
+              <div
+                key={index}
+                style={{
+                  marginBottom: 20,
+                }}
+              >
+                {/* CARD */}
 
-        <div className="grid gap-6">
-          {!loadingRecalls &&
-            recalls.map((recall, index) => {
-              const isSelected =
-                selectedRecall?.Subject ===
-                  recall.Subject &&
-                selectedRecall?.Manufacturer ===
-                  recall.Manufacturer;
+                <div
+                  onClick={() => {
+                    if (isSelected) {
+                      setSelectedRecall(null);
+                    } else {
+                      setSelectedRecall(recall);
+                    }
+                  }}
+                  style={{
+                    background: "white",
+                    padding: 28,
+                    borderRadius: 20,
+                    cursor: "pointer",
+                    boxShadow:
+                      "0 4px 12px rgba(0,0,0,0.08)",
+                    border: isSelected
+                      ? "2px solid #2563eb"
+                      : "2px solid transparent",
+                    transition: "0.2s",
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontSize: 30,
+                      marginBottom: 12,
+                    }}
+                  >
+                    {recall.Manufacturer}
+                  </h2>
 
-              return (
-                <div key={index}>
-                  {/* CARD */}
+                  <p
+                    style={{
+                      fontSize: 20,
+                      marginBottom: 16,
+                    }}
+                  >
+                    {recall.Subject}
+                  </p>
 
                   <div
-                    onClick={() => {
-                      if (isSelected) {
-                        setSelectedRecall(null);
-                      } else {
-                        setSelectedRecall(recall);
-                      }
+                    style={{
+                      display: "inline-block",
+                      background: "#dbeafe",
+                      padding: "8px 14px",
+                      borderRadius: 10,
+                      marginBottom: 20,
                     }}
-                    className={`bg-white rounded-2xl p-6 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-xl border ${
-                      isSelected
-                        ? "border-blue-500"
-                        : "border-transparent"
-                    }`}
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-                      <div>
-                        <h2 className="text-2xl font-bold text-gray-900">
-                          {recall.Manufacturer}
-                        </h2>
-
-                        <p className="text-lg text-gray-700 mt-2">
-                          {recall.Subject}
-                        </p>
-
-                        <div className="mt-4 inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-lg text-sm font-semibold">
-                          {recall.Component}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        <a
-                          href={`https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA Campaign Number"]}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) =>
-                            e.stopPropagation()
-                          }
-                          className="text-blue-600 font-semibold hover:text-blue-800"
-                        >
-                          View Official NHTSA Recall →
-                        </a>
-
-                        <div className="text-sm text-gray-500">
-                          Campaign #:{" "}
-                          {
-                            recall[
-                              "NHTSA Campaign Number"
-                            ]
-                          }
-                        </div>
-                      </div>
-                    </div>
+                    {recall.Component}
                   </div>
 
-                  {/* DETAILS */}
-
-                  {isSelected && (
-                    <div className="bg-white rounded-2xl mt-4 p-8 shadow-lg border border-gray-200 animate-in fade-in">
-                      <h2 className="text-3xl font-bold mb-6">
-                        Recall Details
-                      </h2>
-
-                      <div className="grid md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                          <div className="text-sm text-gray-500">
-                            Manufacturer
-                          </div>
-
-                          <div className="font-semibold text-lg">
-                            {
-                              selectedRecall.Manufacturer
-                            }
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="text-sm text-gray-500">
-                            Report Date
-                          </div>
-
-                          <div className="font-semibold text-lg">
-                            {
-                              selectedRecall[
-                                "Report Received Date"
-                              ]
-                            }
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="text-sm text-gray-500">
-                            Component
-                          </div>
-
-                          <div className="font-semibold text-lg">
-                            {
-                              selectedRecall.Component
-                            }
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="text-sm text-gray-500">
-                            Campaign Number
-                          </div>
-
-                          <div className="font-semibold text-lg">
-                            {
-                              selectedRecall[
-                                "NHTSA Campaign Number"
-                              ]
-                            }
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* DESCRIPTION */}
-
-                      <div className="bg-gray-50 rounded-xl p-6">
-                        <h3 className="text-xl font-bold mb-4">
-                          Recall Description
-                        </h3>
-
-                        <p className="text-gray-700 leading-8 whitespace-pre-wrap">
-                          {
-                            selectedRecall[
-                              "Recall Description"
-                            ]
-                          }
-                        </p>
-                      </div>
-
-                      {/* NHTSA BUTTON */}
-
-                      <div className="mt-6">
-                        <a
-                          href={`https://www.nhtsa.gov/recalls?nhtsaId=${selectedRecall["NHTSA Campaign Number"]}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition"
-                        >
-                          Open Official NHTSA Recall
-                        </a>
-                      </div>
-                    </div>
-                  )}
+                  <div>
+                    <a
+                      href={`https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA Campaign Number"]}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) =>
+                        e.stopPropagation()
+                      }
+                      style={{
+                        color: "#2563eb",
+                        fontWeight: "bold",
+                        textDecoration: "none",
+                      }}
+                    >
+                      View Official NHTSA Recall →
+                    </a>
+                  </div>
                 </div>
-              );
-            })}
-        </div>
+
+                {/* DETAILS */}
+
+                {isSelected && (
+                  <div
+                    style={{
+                      background: "white",
+                      marginTop: 15,
+                      padding: 30,
+                      borderRadius: 20,
+                      boxShadow:
+                        "0 4px 12px rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    <h2
+                      style={{
+                        fontSize: 34,
+                        marginBottom: 20,
+                      }}
+                    >
+                      Recall Details
+                    </h2>
+
+                    <div
+                      style={{
+                        marginBottom: 25,
+                      }}
+                    >
+                      <strong>
+                        Report Date:
+                      </strong>{" "}
+                      {
+                        selectedRecall[
+                          "Report Received Date"
+                        ]
+                      }
+                    </div>
+
+                    <div
+                      style={{
+                        background: "#f9fafb",
+                        padding: 24,
+                        borderRadius: 16,
+                        lineHeight: 1.8,
+                      }}
+                    >
+                      <h3
+                        style={{
+                          marginBottom: 14,
+                          fontSize: 24,
+                        }}
+                      >
+                        Recall Description
+                      </h3>
+
+                      <p>
+                        {
+                          selectedRecall[
+                            "Recall Description"
+                          ]
+                        }
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
 
         {/* PAGINATION */}
 
-        <div className="flex justify-center items-center gap-4 mt-10 mb-10">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: 20,
+            marginTop: 40,
+          }}
+        >
           <button
             onClick={() => {
               if (page > 1) {
@@ -312,12 +370,27 @@ export default function Home() {
                 fetchRecalls(search, newPage);
               }
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold"
+            style={{
+              background: "#2563eb",
+              color: "white",
+              border: "none",
+              padding: "14px 24px",
+              borderRadius: 12,
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
           >
             Previous
           </button>
 
-          <div className="bg-white px-6 py-3 rounded-xl shadow-sm font-bold">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              fontWeight: "bold",
+              fontSize: 18,
+            }}
+          >
             Page {page}
           </div>
 
@@ -330,7 +403,15 @@ export default function Home() {
 
               fetchRecalls(search, newPage);
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold"
+            style={{
+              background: "#2563eb",
+              color: "white",
+              border: "none",
+              padding: "14px 24px",
+              borderRadius: 12,
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
           >
             Next
           </button>
