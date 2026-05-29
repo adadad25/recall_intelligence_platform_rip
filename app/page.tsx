@@ -51,14 +51,16 @@ export default function Home() {
     setLoadingRecalls(false);
   }
 
-  function handleSearch(e) {
-    const value = e.target.value;
+  function handleSearch(
+  e: React.ChangeEvent<HTMLInputElement>
+) {
+  const value = e.target.value;
 
-    setSearch(value);
-    setPage(1);
+  setSearch(value);
+  setPage(1);
 
-    fetchRecalls(value, 1);
-  }
+  fetchRecalls(value, 1);
+}
 
   return (
     <div
