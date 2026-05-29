@@ -4,56 +4,33 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 type Recall = {
-  Manufacturer: string;
-  Subject: string;
-  Component: string;
-  "Recall Description": string;
-  "Report Received Date": string;
+  Manufacturer?: string;
+  Subject?: string;
+  Component?: string;
+  "Recall Description"?: string;
   link?: string;
+  [key: string]: any;
 };
 
 export default function Home() {
   const [recalls, setRecalls] = useState<Recall[]>([]);
   const [search, setSearch] = useState("");
-
-  const [selectedRecall, setSelectedRecall] =
-    useState<Recall | null>(null);
-
-  const [page, setPage] = useState(1);
-
   const [loadingRecalls, setLoadingRecalls] =
     useState(false);
 
   useEffect(() => {
-    fetchRecalls(search, page);
-  }, [page]);
+    fetchRecalls();
+  }, []);
 
-  async function fetchRecalls(
-    searchTerm = "",
-    page = 1
-  ) {
+  async function fetchRecalls() {
     setLoadingRecalls(true);
 
-    const PAGE_SIZE = 100;
-
-    const from = (page - 1) * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
-
-    let query = supabase
+    const { data, error } = await supabase
       .from("recalls")
       .select("*")
-      .range(from, to);
+      .limit(20);
 
-    if (searchTerm) {
-      query = query.or(
-        `Manufacturer.ilike.%${searchTerm}%,Component.ilike.%${searchTerm}%,Subject.ilike.%${searchTerm}%`
-      );
-    }
-
-    const { data, error } = await query;
-
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
+    console.log("SUPABASE DATA:", data);
 
     if (error) {
       console.error(error);
@@ -68,13 +45,20 @@ export default function Home() {
   function handleSearch(
     e: React.ChangeEvent<HTMLInputElement>
   ) {
-    const value = e.target.value;
-
-    setSearch(value);
-    setPage(1);
-
-    fetchRecalls(value, 1);
+    setSearch(e.target.value);
   }
+
+  const filteredRecalls = recalls.filter((recall) => {
+    const q = search.toLowerCase();
+
+    return (
+      recall.Manufacturer
+        ?.toLowerCase()
+        .includes(q) ||
+      recall.Subject?.toLowerCase().includes(q) ||
+      recall.Component?.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div
@@ -85,8 +69,6 @@ export default function Home() {
         fontFamily: "Arial",
       }}
     >
-      {/* HEADER */}
-
       <h1
         style={{
           fontSize: 42,
@@ -101,343 +83,81 @@ export default function Home() {
         style={{
           color: "#666",
           marginBottom: 30,
-          fontSize: 18,
         }}
       >
         Every Failure has some lessons to learn
       </p>
 
-      {/* SEARCH */}
-
-      <div
+      <input
+        type="text"
+        placeholder="Search recalls..."
+        value={search}
+        onChange={handleSearch}
         style={{
-          display: "flex",
-          gap: 10,
-          marginBottom: 40,
+          width: "100%",
+          padding: 16,
+          borderRadius: 12,
+          border: "1px solid #ccc",
+          marginBottom: 30,
+          fontSize: 16,
         }}
-      >
-        <input
-          type="text"
-          placeholder="Search OEM, Component, Subject..."
-          value={search}
-          onChange={handleSearch}
-          style={{
-            flex: 1,
-            padding: 16,
-            borderRadius: 12,
-            border: "1px solid #ccc",
-            fontSize: 16,
-          }}
-        />
+      />
 
-        <button
-          onClick={() => {
-            setSearch("");
-            setPage(1);
-            setSelectedRecall(null);
-
-            fetchRecalls("", 1);
-          }}
-          style={{
-            padding: "0 20px",
-            borderRadius: 12,
-            border: "none",
-            background: "#dc2626",
-            color: "white",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
-          Clear
-        </button>
-      </div>
-
-      {/* RECALL LIST */}
-
-      <div
-        style={{
-          display: "grid",
-          gap: 20,
-        }}
-      >
-        {loadingRecalls ? (
-          <div
-            style={{
-              background: "white",
-              padding: 30,
-              borderRadius: 16,
-              textAlign: "center",
-              fontSize: 18,
-            }}
-          >
-            Loading recalls...
-          </div>
-        ) : (
-          recalls.map((recall, index) => {
-            const isSelected =
-              selectedRecall?.Subject ===
-                recall.Subject &&
-              selectedRecall?.Manufacturer ===
-                recall.Manufacturer;
-
-            return (
-              <div key={index}>
-                {/* CARD */}
-
-                <div
-                  onClick={() => {
-                    if (isSelected) {
-                      setSelectedRecall(null);
-                      return;
-                    }
-
-                    setSelectedRecall(recall);
-                  }}
-                  style={{
-                    background: "white",
-                    padding: 24,
-                    borderRadius: 14,
-                    cursor: "pointer",
-                    boxShadow:
-                      "0 2px 8px rgba(0,0,0,0.08)",
-                    border: isSelected
-                      ? "2px solid #2563eb"
-                      : "none",
-                  }}
-                >
-                  {/* MANUFACTURER */}
-
-                  <h2
-                    style={{
-                      marginBottom: 10,
-                    }}
-                  >
-                    {recall.Manufacturer}
-                  </h2>
-
-                  {/* SUBJECT */}
-
-                  <p
-                    style={{
-                      fontSize: 18,
-                      marginBottom: 10,
-                    }}
-                  >
-                    {recall.Subject}
-                  </p>
-
-                  {/* COMPONENT */}
-
-                  <div
-                    style={{
-                      display: "inline-block",
-                      padding: "6px 12px",
-                      background: "#eef2ff",
-                      borderRadius: 8,
-                      marginBottom: 14,
-                    }}
-                  >
-                    {recall.Component}
-                  </div>
-
-                  {/* NHTSA LINK */}
-
-                  {recall.link && (
-                    <div style={{ marginTop: 12 }}>
-                      <a
-                        href={recall.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) =>
-                          e.stopPropagation()
-                        }
-                        style={{
-                          color: "#2563eb",
-                          fontWeight: "bold",
-                          textDecoration:
-                            "none",
-                        }}
-                      >
-                        View Official NHTSA Recall →
-                      </a>
-                    </div>
-                  )}
-                </div>
-
-                {/* DETAILS PANEL */}
-
-                {isSelected && (
-                  <div
-                    style={{
-                      background: "white",
-                      padding: 30,
-                      borderRadius: 20,
-                      marginTop: 15,
-                      boxShadow:
-                        "0 4px 12px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <h2
-                      style={{
-                        fontSize: 30,
-                        marginBottom: 20,
-                      }}
-                    >
-                      Recall Details
-                    </h2>
-
-                    <h3
-                      style={{
-                        marginBottom: 10,
-                      }}
-                    >
-                      {recall.Subject}
-                    </h3>
-
-                    <p
-                      style={{
-                        marginBottom: 12,
-                      }}
-                    >
-                      <strong>Manufacturer:</strong>{" "}
-                      {recall.Manufacturer}
-                    </p>
-
-                    <p
-                      style={{
-                        marginBottom: 20,
-                        color: "#666",
-                      }}
-                    >
-                      <strong>Report Date:</strong>{" "}
-                      {
-                        recall[
-                          "Report Received Date"
-                        ]
-                      }
-                    </p>
-
-                    {/* DESCRIPTION */}
-
-                    <div
-                      style={{
-                        background: "#f3f4f6",
-                        padding: 20,
-                        borderRadius: 12,
-                        marginBottom: 20,
-                      }}
-                    >
-                      <h4
-                        style={{
-                          marginBottom: 10,
-                        }}
-                      >
-                        Recall Description
-                      </h4>
-
-                      <p
-                        style={{
-                          lineHeight: 1.6,
-                        }}
-                      >
-                        {
-                          recall[
-                            "Recall Description"
-                          ]
-                        }
-                      </p>
-                    </div>
-
-                    {/* DETAIL PAGE LINK */}
-
-                    {recall.link && (
-                      <a
-                        href={recall.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          color: "#2563eb",
-                          fontWeight: "bold",
-                          textDecoration:
-                            "none",
-                        }}
-                      >
-                        Open Official NHTSA Report →
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* PAGINATION */}
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: 20,
-          marginTop: 40,
-          marginBottom: 60,
-        }}
-      >
-        <button
-          onClick={() => {
-            if (page > 1) {
-              const newPage = page - 1;
-
-              setPage(newPage);
-              setSelectedRecall(null);
-
-              fetchRecalls(search, newPage);
-            }
-          }}
-          style={{
-            padding: "12px 20px",
-            borderRadius: 10,
-            border: "none",
-            background: "#2563eb",
-            color: "white",
-            cursor: "pointer",
-          }}
-        >
-          Previous
-        </button>
-
+      {loadingRecalls ? (
+        <p>Loading recalls...</p>
+      ) : (
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            fontWeight: "bold",
+            display: "grid",
+            gap: 20,
           }}
         >
-          Page {page}
+          {filteredRecalls.map((recall, index) => (
+            <div
+              key={index}
+              style={{
+                background: "white",
+                padding: 24,
+                borderRadius: 14,
+                boxShadow:
+                  "0 2px 8px rgba(0,0,0,0.08)",
+              }}
+            >
+              <h2>{recall.Manufacturer}</h2>
+
+              <p>{recall.Subject}</p>
+
+              <div
+                style={{
+                  display: "inline-block",
+                  padding: "6px 12px",
+                  background: "#eef2ff",
+                  borderRadius: 8,
+                  marginTop: 10,
+                }}
+              >
+                {recall.Component}
+              </div>
+
+              {/* DEBUG ALL FIELDS */}
+
+              <pre
+                style={{
+                  marginTop: 20,
+                  background: "#111",
+                  color: "#0f0",
+                  padding: 10,
+                  borderRadius: 8,
+                  overflow: "auto",
+                  fontSize: 12,
+                }}
+              >
+                {JSON.stringify(recall, null, 2)}
+              </pre>
+            </div>
+          ))}
         </div>
-
-        <button
-          onClick={() => {
-            const newPage = page + 1;
-
-            setPage(newPage);
-            setSelectedRecall(null);
-
-            fetchRecalls(search, newPage);
-          }}
-          style={{
-            padding: "12px 20px",
-            borderRadius: 10,
-            border: "none",
-            background: "#2563eb",
-            color: "white",
-            cursor: "pointer",
-          }}
-        >
-          Next
-        </button>
-      </div>
+      )}
     </div>
   );
 }
