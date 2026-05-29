@@ -1,16 +1,10 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-  ChangeEvent,
-} from "react";
-
+import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 export default function Home() {
   const [recalls, setRecalls] = useState<any[]>([]);
-
   const [search, setSearch] = useState("");
 
   const [selectedRecall, setSelectedRecall] =
@@ -34,7 +28,6 @@ export default function Home() {
     const PAGE_SIZE = 100;
 
     const from = (page - 1) * PAGE_SIZE;
-
     const to = from + PAGE_SIZE - 1;
 
     let query = supabase
@@ -60,17 +53,15 @@ export default function Home() {
     }
 
     setRecalls(data || []);
-
     setLoadingRecalls(false);
   }
 
   function handleSearch(
-    e: ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>
   ) {
     const value = e.target.value;
 
     setSearch(value);
-
     setPage(1);
 
     fetchRecalls(value, 1);
@@ -103,8 +94,7 @@ export default function Home() {
           marginBottom: 30,
         }}
       >
-        Every Failure has some lessons to
-        learn
+        Every Failure has some lessons to learn
       </p>
 
       {/* SEARCH */}
@@ -133,9 +123,7 @@ export default function Home() {
         <button
           onClick={() => {
             setSearch("");
-
             setPage(1);
-
             setSelectedRecall(null);
 
             fetchRecalls("", 1);
@@ -189,9 +177,17 @@ export default function Home() {
             const isSelected =
               selectedRecall?.id === recall.id;
 
+            const nhtsaLink =
+              recall["NHTSA Link"] ||
+              (recall["NHTSA ID"]
+                ? `https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA ID"]}`
+                : recall["NHTSA Campaign Number"]
+                ? `https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA Campaign Number"]}`
+                : null);
+
             return (
               <div key={index}>
-                {/* CARD */}
+                {/* RECALL CARD */}
 
                 <div
                   onClick={() => {
@@ -213,6 +209,8 @@ export default function Home() {
                       : "none",
                   }}
                 >
+                  {/* MANUFACTURER */}
+
                   <h2
                     style={{
                       marginBottom: 10,
@@ -220,6 +218,8 @@ export default function Home() {
                   >
                     {recall.Manufacturer}
                   </h2>
+
+                  {/* SUBJECT */}
 
                   <p
                     style={{
@@ -229,6 +229,8 @@ export default function Home() {
                   >
                     {recall.Subject}
                   </p>
+
+                  {/* COMPONENT */}
 
                   <div
                     style={{
@@ -244,16 +246,19 @@ export default function Home() {
 
                   {/* NHTSA LINK */}
 
-                  {recall.Link && (
+                  {nhtsaLink && (
                     <div
                       style={{
                         marginTop: 12,
                       }}
                     >
                       <a
-                        href={recall.Link}
+                        href={nhtsaLink}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) =>
+                          e.stopPropagation()
+                        }
                         style={{
                           color: "#2563eb",
                           fontWeight: "bold",
@@ -266,7 +271,7 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* DETAILS */}
+                {/* EXPANDED DETAILS */}
 
                 {isSelected && (
                   <div
@@ -350,60 +355,29 @@ export default function Home() {
                       </p>
                     </div>
 
-                    {/* ROOT CAUSE */}
+                    {/* NHTSA BUTTON */}
 
-                    <div
-                      style={{
-                        background: "#dbeafe",
-                        padding: 20,
-                        borderRadius: 12,
-                      }}
-                    >
-                      <h4
+                    {nhtsaLink && (
+                      <a
+                        href={nhtsaLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
-                          marginBottom: 10,
+                          display: "inline-block",
+                          marginTop: 10,
+                          padding:
+                            "12px 18px",
+                          background:
+                            "#2563eb",
+                          color: "white",
+                          borderRadius: 10,
+                          textDecoration:
+                            "none",
+                          fontWeight: "bold",
                         }}
                       >
-                        Root Cause Assessment
-                      </h4>
-
-                      <p>
-                        This recall likely
-                        originated from a
-                        failure within the{" "}
-                        <strong>
-                          {recall.Component}
-                        </strong>{" "}
-                        system, potentially
-                        creating elevated
-                        operational and safety
-                        risks.
-                      </p>
-                    </div>
-
-                    {/* DETAILS LINK */}
-
-                    {recall.Link && (
-                      <div
-                        style={{
-                          marginTop: 20,
-                        }}
-                      >
-                        <a
-                          href={recall.Link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: "#2563eb",
-                            fontWeight: "bold",
-                            textDecoration:
-                              "none",
-                          }}
-                        >
-                          Open Official NHTSA
-                          Report →
-                        </a>
-                      </div>
+                        Open Official NHTSA Page
+                      </a>
                     )}
                   </div>
                 )}
@@ -430,7 +404,6 @@ export default function Home() {
               const newPage = page - 1;
 
               setPage(newPage);
-
               setSelectedRecall(null);
 
               fetchRecalls(search, newPage);
@@ -463,7 +436,6 @@ export default function Home() {
             const newPage = page + 1;
 
             setPage(newPage);
-
             setSelectedRecall(null);
 
             fetchRecalls(search, newPage);
