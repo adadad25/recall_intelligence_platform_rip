@@ -4,8 +4,12 @@ export function analyzeRecall(description: string) {
   const text = description.toLowerCase();
 
   let system = "General Vehicle System";
-  let failureMode = "Unknown Failure Mode";
-  let safetyRisk = "Unknown Safety Risk";
+
+  let failureMode =
+    "General Component Failure";
+
+  let safetyRisk =
+    "Potential Vehicle Safety Risk";
 
   let potentialCauses: string[] = [];
 
@@ -41,6 +45,18 @@ export function analyzeRecall(description: string) {
   }
 
   else if (
+    text.includes("dc-dc") ||
+    text.includes("converter") ||
+    text.includes("high voltage") ||
+    text.includes("drive power") ||
+    text.includes("ev") ||
+    text.includes("electric vehicle")
+  ) {
+    system =
+      "High Voltage Power Conversion System";
+  }
+
+  else if (
     text.includes("fuel")
   ) {
     system = "Fuel System";
@@ -73,7 +89,8 @@ export function analyzeRecall(description: string) {
   else if (
     text.includes("camera")
   ) {
-    system = "Driver Assistance System";
+    system =
+      "Driver Assistance System";
   }
 
   /* =========================
@@ -84,68 +101,106 @@ export function analyzeRecall(description: string) {
     text.includes("fire") ||
     text.includes("burn")
   ) {
-    failureMode = "Thermal Event / Fire";
+    failureMode =
+      "Thermal Event / Fire";
   }
 
   else if (
     text.includes("leak")
   ) {
-    failureMode = "Fluid Leakage";
+    failureMode =
+      "Fluid Leakage";
   }
 
   else if (
     text.includes("fracture") ||
     text.includes("crack")
   ) {
-    failureMode = "Structural Fracture";
+    failureMode =
+      "Structural Fracture";
   }
 
   else if (
     text.includes("detach")
   ) {
-    failureMode = "Component Detachment";
+    failureMode =
+      "Component Detachment";
   }
 
   else if (
     text.includes("loss of braking")
   ) {
-    failureMode = "Brake Performance Loss";
+    failureMode =
+      "Brake Performance Loss";
   }
 
   else if (
     text.includes("stall")
   ) {
-    failureMode = "Engine Stall";
+    failureMode =
+      "Engine Stall";
   }
 
   else if (
     text.includes("short circuit")
   ) {
-    failureMode = "Electrical Short Circuit";
+    failureMode =
+      "Electrical Short Circuit";
   }
 
   else if (
     text.includes("overheat")
   ) {
-    failureMode = "Thermal Overheating";
+    failureMode =
+      "Thermal Overheating";
   }
 
   else if (
     text.includes("loss of steering")
   ) {
-    failureMode = "Steering Control Loss";
+    failureMode =
+      "Steering Control Loss";
   }
 
   else if (
-    text.includes("incorrect deployment")
+    text.includes(
+      "incorrect deployment"
+    )
   ) {
-    failureMode = "Improper Airbag Deployment";
+    failureMode =
+      "Improper Airbag Deployment";
   }
 
   else if (
     text.includes("software")
   ) {
-    failureMode = "Software Logic Defect";
+    failureMode =
+      "Software Logic Defect";
+  }
+
+  else if (
+    text.includes(
+      "loss of drive power"
+    )
+  ) {
+    failureMode =
+      "Loss of Propulsion Power";
+  }
+
+  else if (
+    text.includes(
+      "converter failure"
+    )
+  ) {
+    failureMode =
+      "Power Conversion Failure";
+  }
+
+  else if (
+    text.includes("voltage")
+  ) {
+    failureMode =
+      "Electrical Power Instability";
   }
 
   /* =========================
@@ -155,55 +210,97 @@ export function analyzeRecall(description: string) {
   if (
     text.includes("crash")
   ) {
-    safetyRisk = "Vehicle Crash Risk";
+    safetyRisk =
+      "Vehicle Crash Risk";
   }
 
   else if (
     text.includes("injury")
   ) {
-    safetyRisk = "Occupant Injury Risk";
+    safetyRisk =
+      "Occupant Injury Risk";
   }
 
   else if (
     text.includes("fire")
   ) {
-    safetyRisk = "Vehicle Fire Risk";
+    safetyRisk =
+      "Vehicle Fire Risk";
   }
 
   else if (
-    text.includes("loss of braking")
+    text.includes(
+      "loss of braking"
+    )
   ) {
-    safetyRisk = "Loss of Vehicle Braking";
+    safetyRisk =
+      "Loss of Vehicle Braking";
   }
 
   else if (
-    text.includes("loss of steering")
+    text.includes(
+      "loss of steering"
+    )
   ) {
-    safetyRisk = "Loss of Vehicle Control";
+    safetyRisk =
+      "Loss of Vehicle Control";
   }
 
   else if (
-    text.includes("air bag fails")
+    text.includes(
+      "air bag fails"
+    )
   ) {
-    safetyRisk = "Reduced Crash Protection";
+    safetyRisk =
+      "Reduced Crash Protection";
   }
 
   else if (
     text.includes("rollaway")
   ) {
-    safetyRisk = "Unintended Vehicle Movement";
+    safetyRisk =
+      "Unintended Vehicle Movement";
   }
 
   else if (
     text.includes("visibility")
   ) {
-    safetyRisk = "Reduced Driver Visibility";
+    safetyRisk =
+      "Reduced Driver Visibility";
   }
 
   else if (
     text.includes("stall")
   ) {
-    safetyRisk = "Loss of Propulsion";
+    safetyRisk =
+      "Loss of Propulsion";
+  }
+
+  else if (
+    text.includes(
+      "loss of drive power"
+    )
+  ) {
+    safetyRisk =
+      "Sudden Loss of Vehicle Propulsion";
+  }
+
+  else if (
+    text.includes(
+      "vehicle may stall"
+    )
+  ) {
+    safetyRisk =
+      "Vehicle Stall During Operation";
+  }
+
+  else if (
+    text.includes(
+      "loss of propulsion"
+    )
+  ) {
+    safetyRisk =
+      "Loss of Vehicle Mobility";
   }
 
   /* =========================
@@ -252,7 +349,9 @@ export function analyzeRecall(description: string) {
   }
 
   if (
-    text.includes("short circuit")
+    text.includes(
+      "short circuit"
+    )
   ) {
     potentialCauses.push(
       "Wire insulation damage",
@@ -270,6 +369,33 @@ export function analyzeRecall(description: string) {
       "Vibration fatigue"
     );
   }
+
+  if (
+    text.includes("converter")
+  ) {
+    potentialCauses.push(
+      "Power electronics thermal stress",
+      "Voltage conversion instability",
+      "Semiconductor switching failure",
+      "Cooling system degradation"
+    );
+  }
+
+  if (
+    text.includes(
+      "drive power"
+    )
+  ) {
+    potentialCauses.push(
+      "High-voltage system interruption",
+      "Battery communication fault",
+      "DC bus instability"
+    );
+  }
+
+  /* =========================
+     FALLBACK CAUSES
+  ========================= */
 
   if (
     potentialCauses.length === 0
