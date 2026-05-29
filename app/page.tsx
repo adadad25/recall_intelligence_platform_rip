@@ -7,11 +7,11 @@ export default function Home() {
   const [recalls, setRecalls] = useState([]);
   const [search, setSearch] = useState("");
 
-  const [selectedRecall, setSelectedRecall] = useState(null);
+  const [selectedRecall, setSelectedRecall] =
+    useState(null);
+
   const [page, setPage] = useState(1);
 
-  const [aiAnalysis, setAiAnalysis] = useState("");
-  const [loadingAI, setLoadingAI] = useState(false);
   const [loadingRecalls, setLoadingRecalls] =
     useState(false);
 
@@ -26,6 +26,7 @@ export default function Home() {
     setLoadingRecalls(true);
 
     const PAGE_SIZE = 100;
+
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
@@ -42,6 +43,9 @@ export default function Home() {
 
     const { data, error } = await query;
 
+    console.log("SUPABASE DATA:", data);
+    console.log("SUPABASE ERROR:", error);
+
     if (error) {
       console.error(error);
       setLoadingRecalls(false);
@@ -50,37 +54,6 @@ export default function Home() {
 
     setRecalls(data || []);
     setLoadingRecalls(false);
-  }
-
-  async function analyzeRecall(recall) {
-    try {
-      setLoadingAI(true);
-      setAiAnalysis("");
-
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ recall }),
-      });
-
-      if (!response.ok) {
-        throw new Error("AI request failed");
-      }
-
-      const data = await response.json();
-
-      setAiAnalysis(data.result);
-    } catch (err) {
-      console.error(err);
-
-      setAiAnalysis(
-        "Unable to generate AI analysis at this time."
-      );
-    } finally {
-      setLoadingAI(false);
-    }
   }
 
   function handleSearch(e) {
@@ -119,8 +92,8 @@ export default function Home() {
           marginBottom: 30,
         }}
       >
-        Enterprise Recall Analytics & Root Cause
-        Intelligence
+        Enterprise Recall Analytics &
+        Root Cause Intelligence
       </p>
 
       {/* SEARCH */}
@@ -151,7 +124,6 @@ export default function Home() {
             setSearch("");
             setPage(1);
             setSelectedRecall(null);
-            setAiAnalysis("");
 
             fetchRecalls("", 1);
           }}
@@ -184,43 +156,37 @@ export default function Home() {
               padding: 30,
               borderRadius: 16,
               textAlign: "center",
-              fontSize: 18,
             }}
           >
             Loading recalls...
+          </div>
+        ) : recalls.length === 0 ? (
+          <div
+            style={{
+              background: "white",
+              padding: 30,
+              borderRadius: 16,
+              textAlign: "center",
+            }}
+          >
+            No recalls found.
           </div>
         ) : (
           recalls.map((recall, index) => {
             const isSelected =
               selectedRecall?.id === recall.id;
 
-            // HANDLE BOTH POSSIBLE COLUMN NAMES
-            const nhtsaId =
-              recall["NHTSA Campaign Number"] ||
-              recall["NHTSA ID"] ||
-              "";
-
-            const recallLink =
-              recall["Recall Link"];
-
             return (
               <div key={index}>
-                {/* CARD */}
+                {/* RECALL CARD */}
 
                 <div
-                  onClick={async () => {
+                  onClick={() => {
                     if (isSelected) {
                       setSelectedRecall(null);
-                      return;
+                    } else {
+                      setSelectedRecall(recall);
                     }
-
-                    setSelectedRecall(recall);
-
-                    setAiAnalysis(
-                      "Analyzing recall with AI..."
-                    );
-
-                    await analyzeRecall(recall);
                   }}
                   style={{
                     background: "white",
@@ -234,9 +200,13 @@ export default function Home() {
                       : "none",
                   }}
                 >
-                  {/* OEM */}
+                  {/* MANUFACTURER */}
 
-                  <h2 style={{ marginBottom: 10 }}>
+                  <h2
+                    style={{
+                      marginBottom: 10,
+                    }}
+                  >
                     {recall.Manufacturer}
                   </h2>
 
@@ -259,7 +229,7 @@ export default function Home() {
                       padding: "6px 12px",
                       background: "#eef2ff",
                       borderRadius: 8,
-                      marginBottom: 14,
+                      marginBottom: 12,
                     }}
                   >
                     {recall.Component}
@@ -267,44 +237,40 @@ export default function Home() {
 
                   {/* NHTSA LINK */}
 
-                  <div style={{ marginTop: 10 }}>
-                    <a
-                      href={
-                        recallLink
-                          ? recallLink.match(
-                              /\((.*?)\)/
-                            )?.[1] || "#"
-                          : `https://www.nhtsa.gov/recalls?nhtsaId=${nhtsaId}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) =>
-                        e.stopPropagation()
-                      }
+                  {recall["NHTSA ID"] && (
+                    <div
                       style={{
-                        color: "#2563eb",
-                        fontWeight: "bold",
-                        textDecoration: "none",
+                        marginTop: 12,
                       }}
                     >
-                      View Official NHTSA Recall →
-                    </a>
-
-                    {nhtsaId && (
-                      <p
+                      <a
+                        href={`https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA ID"]}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
-                          marginTop: 8,
+                          color: "#2563eb",
+                          fontWeight: "bold",
+                          textDecoration: "none",
+                        }}
+                      >
+                        View Official NHTSA Recall →
+                      </a>
+
+                      <div
+                        style={{
+                          marginTop: 6,
                           color: "#666",
                           fontSize: 14,
                         }}
                       >
-                        Campaign #: {nhtsaId}
-                      </p>
-                    )}
-                  </div>
+                        NHTSA ID:{" "}
+                        {recall["NHTSA ID"]}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* EXPANDED PANEL */}
+                {/* EXPANDED DETAILS */}
 
                 {isSelected && (
                   <div
@@ -319,39 +285,47 @@ export default function Home() {
                   >
                     <h2
                       style={{
-                        fontSize: 30,
+                        fontSize: 28,
                         marginBottom: 20,
                       }}
                     >
-                      AI Recall Intelligence
+                      Recall Details
                     </h2>
 
-                    <h3 style={{ marginBottom: 10 }}>
+                    <h3
+                      style={{
+                        marginBottom: 10,
+                      }}
+                    >
                       {recall.Subject}
                     </h3>
 
-                    <p style={{ marginBottom: 10 }}>
-                      <strong>Manufacturer:</strong>{" "}
+                    <p
+                      style={{
+                        marginBottom: 10,
+                      }}
+                    >
+                      <strong>
+                        Manufacturer:
+                      </strong>{" "}
                       {recall.Manufacturer}
                     </p>
 
-                    {recall[
-                      "Report Received Date"
-                    ] && (
-                      <p
-                        style={{
-                          color: "#666",
-                          marginBottom: 20,
-                        }}
-                      >
-                        Report Date:{" "}
-                        {
-                          recall[
-                            "Report Received Date"
-                          ]
-                        }
-                      </p>
-                    )}
+                    <p
+                      style={{
+                        marginBottom: 20,
+                        color: "#666",
+                      }}
+                    >
+                      <strong>
+                        Report Date:
+                      </strong>{" "}
+                      {
+                        recall[
+                          "Report Received Date"
+                        ]
+                      }
+                    </p>
 
                     {/* DESCRIPTION */}
 
@@ -364,7 +338,9 @@ export default function Home() {
                       }}
                     >
                       <h4
-                        style={{ marginBottom: 10 }}
+                        style={{
+                          marginBottom: 10,
+                        }}
                       >
                         Recall Description
                       </h4>
@@ -378,32 +354,6 @@ export default function Home() {
                       </p>
                     </div>
 
-                    {/* AI */}
-
-                    <div
-                      style={{
-                        background: "#eff6ff",
-                        padding: 20,
-                        borderRadius: 12,
-                        marginBottom: 20,
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      <h4
-                        style={{ marginBottom: 10 }}
-                      >
-                        AI Intelligence Analysis
-                      </h4>
-
-                      {loadingAI ? (
-                        <p>
-                          Generating AI analysis...
-                        </p>
-                      ) : (
-                        <p>{aiAnalysis}</p>
-                      )}
-                    </div>
-
                     {/* ROOT CAUSE */}
 
                     <div
@@ -411,49 +361,27 @@ export default function Home() {
                         background: "#dbeafe",
                         padding: 20,
                         borderRadius: 12,
-                        marginBottom: 20,
                       }}
                     >
                       <h4
-                        style={{ marginBottom: 10 }}
+                        style={{
+                          marginBottom: 10,
+                        }}
                       >
-                        AI Root Cause Assessment
+                        Root Cause Assessment
                       </h4>
 
                       <p>
-                        This recall likely originated
-                        from a failure within the{" "}
+                        This recall likely
+                        originated from a failure
+                        within the{" "}
                         <strong>
                           {recall.Component}
                         </strong>{" "}
-                        system, potentially creating
-                        elevated operational and
-                        safety risks.
-                      </p>
-                    </div>
-
-                    {/* ENGINEERING */}
-
-                    <div
-                      style={{
-                        background: "#fef3c7",
-                        padding: 20,
-                        borderRadius: 12,
-                      }}
-                    >
-                      <h4
-                        style={{ marginBottom: 10 }}
-                      >
-                        Engineering Risk Insight
-                      </h4>
-
-                      <p>
-                        Similar recalls are commonly
-                        associated with supplier
-                        quality variation,
-                        validation gaps, thermal
-                        stress, or manufacturing
-                        process deviations.
+                        system, potentially
+                        creating elevated
+                        operational and safety
+                        risks.
                       </p>
                     </div>
                   </div>
