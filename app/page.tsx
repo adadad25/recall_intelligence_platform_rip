@@ -15,10 +15,12 @@ type Recall = {
 export default function Home() {
   const [recalls, setRecalls] = useState<Recall[]>([]);
   const [search, setSearch] = useState("");
+
   const [selectedRecall, setSelectedRecall] =
     useState<Recall | null>(null);
 
   const [page, setPage] = useState(1);
+
   const [loadingRecalls, setLoadingRecalls] =
     useState(false);
 
@@ -31,15 +33,23 @@ export default function Home() {
     page = 1
   ) {
     setLoadingRecalls(true);
+    setRecalls([]);
 
-    const PAGE_SIZE = 50;
+    const PAGE_SIZE = 100;
 
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
     let query = supabase
       .from("recalls")
-      .select("*")
+      .select(`
+        Manufacturer,
+        Subject,
+        Component,
+        "Recall Description",
+        "Report Received Date",
+        "NHTSA Campaign Number"
+      `)
       .range(from, to);
 
     if (searchTerm) {
@@ -56,7 +66,7 @@ export default function Home() {
       return;
     }
 
-    setRecalls((data as Recall[]) || []);
+    setRecalls(data || []);
     setLoadingRecalls(false);
   }
 
@@ -74,65 +84,54 @@ export default function Home() {
   return (
     <div
       style={{
+        padding: 40,
+        background: "#f3f4f6",
         minHeight: "100vh",
-        background: "#f4f7fb",
-        padding: "40px 20px",
-        fontFamily:
-          "Inter, Arial, Helvetica, sans-serif",
+        fontFamily: "Arial",
       }}
     >
       {/* HEADER */}
 
-      <div
+      <h1
         style={{
-          maxWidth: 1200,
-          margin: "0 auto 40px auto",
+          fontSize: 42,
+          fontWeight: "bold",
+          marginBottom: 10,
         }}
       >
-        <h1
-          style={{
-            fontSize: 44,
-            fontWeight: 800,
-            marginBottom: 10,
-            color: "#111827",
-          }}
-        >
-          Recall Intelligence Platform
-        </h1>
+        Recall Intelligence Platform
+      </h1>
 
-        <p
-          style={{
-            fontSize: 18,
-            color: "#6b7280",
-          }}
-        >
-          Every Failure has some lessons to learn
-        </p>
-      </div>
+      <p
+        style={{
+          color: "#666",
+          marginBottom: 30,
+          fontSize: 18,
+        }}
+      >
+        Every Failure has some lessons to learn
+      </p>
 
       {/* SEARCH */}
 
       <div
         style={{
-          maxWidth: 1200,
-          margin: "0 auto 40px auto",
           display: "flex",
-          gap: 12,
+          gap: 10,
+          marginBottom: 40,
         }}
       >
         <input
           type="text"
-          placeholder="Search manufacturer, component, subject..."
+          placeholder="Search OEM, Component, Subject..."
           value={search}
           onChange={handleSearch}
           style={{
             flex: 1,
-            padding: 18,
-            borderRadius: 14,
-            border: "1px solid #d1d5db",
+            padding: 16,
+            borderRadius: 12,
+            border: "1px solid #ccc",
             fontSize: 16,
-            background: "white",
-            outline: "none",
           }}
         />
 
@@ -141,62 +140,50 @@ export default function Home() {
             setSearch("");
             setPage(1);
             setSelectedRecall(null);
+
             fetchRecalls("", 1);
           }}
           style={{
-            padding: "0 24px",
-            borderRadius: 14,
+            padding: "0 20px",
+            borderRadius: 12,
             border: "none",
             background: "#dc2626",
             color: "white",
-            fontWeight: 700,
+            fontWeight: "bold",
             cursor: "pointer",
-            fontSize: 15,
           }}
         >
           Clear
         </button>
       </div>
 
-      {/* LOADING */}
-
-      {loadingRecalls && (
-        <div
-          style={{
-            textAlign: "center",
-            marginTop: 60,
-            fontSize: 18,
-            color: "#6b7280",
-          }}
-        >
-          Loading recalls...
-        </div>
-      )}
-
-      {/* RECALL CARDS */}
+      {/* RECALL LIST */}
 
       <div
         style={{
-          maxWidth: 1200,
-          margin: "0 auto",
           display: "grid",
-          gap: 22,
+          gap: 20,
         }}
       >
-        {!loadingRecalls &&
+        {loadingRecalls ? (
+          <div
+            style={{
+              background: "white",
+              padding: 30,
+              borderRadius: 16,
+              textAlign: "center",
+              fontSize: 18,
+            }}
+          >
+            Loading recalls...
+          </div>
+        ) : (
           recalls.map((recall, index) => {
             const isSelected =
               selectedRecall?.Subject ===
                 recall.Subject &&
               selectedRecall?.Manufacturer ===
                 recall.Manufacturer;
-
-            const campaignNumber =
-              recall["NHTSA Campaign Number"];
-
-            const nhtsaUrl = campaignNumber
-              ? `https://www.nhtsa.gov/vehicle/${campaignNumber}/recalls`
-              : null;
 
             return (
               <div key={index}>
@@ -206,192 +193,196 @@ export default function Home() {
                   onClick={() => {
                     if (isSelected) {
                       setSelectedRecall(null);
-                    } else {
-                      setSelectedRecall(recall);
+                      return;
                     }
+
+                    setSelectedRecall(recall);
                   }}
                   style={{
                     background: "white",
-                    borderRadius: 22,
-                    padding: 28,
+                    padding: 24,
+                    borderRadius: 14,
                     cursor: "pointer",
                     boxShadow:
-                      "0 4px 18px rgba(0,0,0,0.06)",
+                      "0 2px 8px rgba(0,0,0,0.08)",
                     border: isSelected
                       ? "2px solid #2563eb"
-                      : "1px solid #e5e7eb",
-                    transition: "0.2s ease",
+                      : "none",
                   }}
                 >
-                  {/* TOP */}
+                  <h2
+                    style={{
+                      marginBottom: 10,
+                    }}
+                  >
+                    {recall.Manufacturer}
+                  </h2>
+
+                  <p
+                    style={{
+                      fontSize: 18,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {recall.Subject}
+                  </p>
 
                   <div
                     style={{
-                      display: "flex",
-                      justifyContent:
-                        "space-between",
-                      alignItems: "start",
-                      gap: 20,
-                      flexWrap: "wrap",
+                      display: "inline-block",
+                      padding: "6px 12px",
+                      background: "#eef2ff",
+                      borderRadius: 8,
+                      marginBottom: 14,
                     }}
                   >
-                    <div>
-                      <h2
-                        style={{
-                          fontSize: 24,
-                          fontWeight: 700,
-                          marginBottom: 12,
-                          color: "#111827",
-                        }}
-                      >
-                        {recall.Manufacturer}
-                      </h2>
-
-                      <p
-                        style={{
-                          fontSize: 17,
-                          lineHeight: 1.5,
-                          color: "#374151",
-                          marginBottom: 18,
-                        }}
-                      >
-                        {recall.Subject}
-                      </p>
-
-                      <div
-                        style={{
-                          display: "inline-block",
-                          padding:
-                            "8px 14px",
-                          borderRadius: 10,
-                          background:
-                            "#eff6ff",
-                          color: "#1d4ed8",
-                          fontWeight: 600,
-                          fontSize: 14,
-                        }}
-                      >
-                        {recall.Component}
-                      </div>
-                    </div>
-
-                    {/* DATE */}
-
-                    <div
-                      style={{
-                        fontSize: 14,
-                        color: "#6b7280",
-                        background:
-                          "#f9fafb",
-                        padding:
-                          "10px 14px",
-                        borderRadius: 12,
-                      }}
-                    >
-                      {recall[
-                        "Report Received Date"
-                      ] || "No Date"}
-                    </div>
+                    {recall.Component}
                   </div>
 
-                  {/* LINKS */}
+                  {/* NHTSA LINK */}
 
-                  <div
-                    style={{
-                      marginTop: 22,
-                      display: "flex",
-                      gap: 16,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    {campaignNumber && (
-                      <a
-                        href={`https://www.nhtsa.gov/recalls?nhtsaId=${campaignNumber}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) =>
-                          e.stopPropagation()
-                        }
-                        style={{
-                          color: "#2563eb",
-                          fontWeight: 700,
-                          textDecoration:
-                            "none",
-                          fontSize: 15,
-                        }}
-                      >
-                        View NHTSA Recall →
-                      </a>
-                    )}
+                  <div>
+                    <a
+                      href={`https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA Campaign Number"]}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: "#2563eb",
+                        fontWeight: "bold",
+                        textDecoration: "none",
+                      }}
+                    >
+                      View Official NHTSA Recall →
+                    </a>
 
-                    {nhtsaUrl && (
-                      <a
-                        href={nhtsaUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) =>
-                          e.stopPropagation()
-                        }
-                        style={{
-                          color: "#059669",
-                          fontWeight: 700,
-                          textDecoration:
-                            "none",
-                          fontSize: 15,
-                        }}
-                      >
-                        Vehicle Recall Details →
-                      </a>
-                    )}
+                    <p
+                      style={{
+                        marginTop: 8,
+                        color: "#666",
+                        fontSize: 14,
+                      }}
+                    >
+                      Campaign #:{" "}
+                      {
+                        recall[
+                          "NHTSA Campaign Number"
+                        ]
+                      }
+                    </p>
                   </div>
                 </div>
 
-                {/* EXPANDED PANEL */}
+                {/* DETAILS PANEL */}
 
                 {isSelected && (
                   <div
                     style={{
-                      marginTop: 14,
                       background: "white",
-                      borderRadius: 22,
                       padding: 30,
+                      borderRadius: 20,
+                      marginTop: 15,
                       boxShadow:
-                        "0 4px 18px rgba(0,0,0,0.06)",
+                        "0 4px 12px rgba(0,0,0,0.08)",
                     }}
                   >
-                    <h3
+                    <h2
                       style={{
-                        fontSize: 28,
-                        fontWeight: 700,
+                        fontSize: 30,
                         marginBottom: 20,
-                        color: "#111827",
                       }}
                     >
                       Recall Details
+                    </h2>
+
+                    <h3
+                      style={{
+                        marginBottom: 10,
+                      }}
+                    >
+                      {recall.Subject}
                     </h3>
+
+                    <p
+                      style={{
+                        marginBottom: 12,
+                      }}
+                    >
+                      <strong>Manufacturer:</strong>{" "}
+                      {recall.Manufacturer}
+                    </p>
+
+                    <p
+                      style={{
+                        marginBottom: 20,
+                        color: "#666",
+                      }}
+                    >
+                      <strong>Report Date:</strong>{" "}
+                      {
+                        recall[
+                          "Report Received Date"
+                        ]
+                      }
+                    </p>
+
+                    {/* DESCRIPTION */}
 
                     <div
                       style={{
-                        background:
-                          "#f9fafb",
-                        borderRadius: 16,
-                        padding: 24,
-                        lineHeight: 1.8,
-                        color: "#374151",
-                        fontSize: 16,
+                        background: "#f3f4f6",
+                        padding: 20,
+                        borderRadius: 12,
+                        marginBottom: 20,
                       }}
                     >
-                      {
-                        recall[
-                          "Recall Description"
-                        ]
-                      }
+                      <h4
+                        style={{
+                          marginBottom: 10,
+                        }}
+                      >
+                        Recall Description
+                      </h4>
+
+                      <p
+                        style={{
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        {
+                          recall[
+                            "Recall Description"
+                          ]
+                        }
+                      </p>
+                    </div>
+
+                    {/* COMPONENT */}
+
+                    <div
+                      style={{
+                        background: "#eef2ff",
+                        padding: 20,
+                        borderRadius: 12,
+                      }}
+                    >
+                      <h4
+                        style={{
+                          marginBottom: 10,
+                        }}
+                      >
+                        Affected Component
+                      </h4>
+
+                      <p>
+                        {recall.Component}
+                      </p>
                     </div>
                   </div>
                 )}
               </div>
             );
-          })}
+          })
+        )}
       </div>
 
       {/* PAGINATION */}
@@ -400,25 +391,28 @@ export default function Home() {
         style={{
           display: "flex",
           justifyContent: "center",
-          gap: 16,
-          marginTop: 50,
+          gap: 20,
+          marginTop: 40,
+          marginBottom: 60,
         }}
       >
         <button
           onClick={() => {
             if (page > 1) {
               const newPage = page - 1;
+
               setPage(newPage);
+              setSelectedRecall(null);
+
               fetchRecalls(search, newPage);
             }
           }}
           style={{
-            padding: "14px 24px",
-            borderRadius: 14,
+            padding: "12px 20px",
+            borderRadius: 10,
             border: "none",
             background: "#2563eb",
             color: "white",
-            fontWeight: 700,
             cursor: "pointer",
           }}
         >
@@ -429,9 +423,7 @@ export default function Home() {
           style={{
             display: "flex",
             alignItems: "center",
-            fontWeight: 700,
-            fontSize: 16,
-            color: "#111827",
+            fontWeight: "bold",
           }}
         >
           Page {page}
@@ -440,16 +432,18 @@ export default function Home() {
         <button
           onClick={() => {
             const newPage = page + 1;
+
             setPage(newPage);
+            setSelectedRecall(null);
+
             fetchRecalls(search, newPage);
           }}
           style={{
-            padding: "14px 24px",
-            borderRadius: 14,
+            padding: "12px 20px",
+            borderRadius: 10,
             border: "none",
             background: "#2563eb",
             color: "white",
-            fontWeight: 700,
             cursor: "pointer",
           }}
         >
