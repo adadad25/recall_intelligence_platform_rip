@@ -1,19 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+  ChangeEvent,
+} from "react";
+
 import { supabase } from "../lib/supabase";
 
 export default function Home() {
   const [recalls, setRecalls] = useState<any[]>([]);
-const [search, setSearch] = useState("");
 
-const [selectedRecall, setSelectedRecall] =
-  useState<any | null>(null);
+  const [search, setSearch] = useState("");
 
-const [page, setPage] = useState(1);
+  const [selectedRecall, setSelectedRecall] =
+    useState<any | null>(null);
 
-const [loadingRecalls, setLoadingRecalls] =
-  useState(false);
+  const [page, setPage] = useState(1);
+
+  const [loadingRecalls, setLoadingRecalls] =
+    useState(false);
+
   useEffect(() => {
     fetchRecalls(search, page);
   }, [page]);
@@ -27,6 +34,7 @@ const [loadingRecalls, setLoadingRecalls] =
     const PAGE_SIZE = 100;
 
     const from = (page - 1) * PAGE_SIZE;
+
     const to = from + PAGE_SIZE - 1;
 
     let query = supabase
@@ -52,13 +60,17 @@ const [loadingRecalls, setLoadingRecalls] =
     }
 
     setRecalls(data || []);
+
     setLoadingRecalls(false);
   }
 
-  function handleSearch(e) {
+  function handleSearch(
+    e: ChangeEvent<HTMLInputElement>
+  ) {
     const value = e.target.value;
 
     setSearch(value);
+
     setPage(1);
 
     fetchRecalls(value, 1);
@@ -91,8 +103,8 @@ const [loadingRecalls, setLoadingRecalls] =
           marginBottom: 30,
         }}
       >
-        Enterprise Recall Analytics &
-        Root Cause Intelligence
+        Every Failure has some lessons to
+        learn
       </p>
 
       {/* SEARCH */}
@@ -121,7 +133,9 @@ const [loadingRecalls, setLoadingRecalls] =
         <button
           onClick={() => {
             setSearch("");
+
             setPage(1);
+
             setSelectedRecall(null);
 
             fetchRecalls("", 1);
@@ -177,7 +191,7 @@ const [loadingRecalls, setLoadingRecalls] =
 
             return (
               <div key={index}>
-                {/* RECALL CARD */}
+                {/* CARD */}
 
                 <div
                   onClick={() => {
@@ -199,8 +213,6 @@ const [loadingRecalls, setLoadingRecalls] =
                       : "none",
                   }}
                 >
-                  {/* MANUFACTURER */}
-
                   <h2
                     style={{
                       marginBottom: 10,
@@ -208,8 +220,6 @@ const [loadingRecalls, setLoadingRecalls] =
                   >
                     {recall.Manufacturer}
                   </h2>
-
-                  {/* SUBJECT */}
 
                   <p
                     style={{
@@ -219,8 +229,6 @@ const [loadingRecalls, setLoadingRecalls] =
                   >
                     {recall.Subject}
                   </p>
-
-                  {/* COMPONENT */}
 
                   <div
                     style={{
@@ -236,14 +244,14 @@ const [loadingRecalls, setLoadingRecalls] =
 
                   {/* NHTSA LINK */}
 
-                  {recall["NHTSA ID"] && (
+                  {recall.Link && (
                     <div
                       style={{
                         marginTop: 12,
                       }}
                     >
                       <a
-                        href={`https://www.nhtsa.gov/recalls?nhtsaId=${recall["NHTSA ID"]}`}
+                        href={recall.Link}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
@@ -254,22 +262,11 @@ const [loadingRecalls, setLoadingRecalls] =
                       >
                         View Official NHTSA Recall →
                       </a>
-
-                      <div
-                        style={{
-                          marginTop: 6,
-                          color: "#666",
-                          fontSize: 14,
-                        }}
-                      >
-                        NHTSA ID:{" "}
-                        {recall["NHTSA ID"]}
-                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* EXPANDED DETAILS */}
+                {/* DETAILS */}
 
                 {isSelected && (
                   <div
@@ -372,8 +369,8 @@ const [loadingRecalls, setLoadingRecalls] =
 
                       <p>
                         This recall likely
-                        originated from a failure
-                        within the{" "}
+                        originated from a
+                        failure within the{" "}
                         <strong>
                           {recall.Component}
                         </strong>{" "}
@@ -383,6 +380,31 @@ const [loadingRecalls, setLoadingRecalls] =
                         risks.
                       </p>
                     </div>
+
+                    {/* DETAILS LINK */}
+
+                    {recall.Link && (
+                      <div
+                        style={{
+                          marginTop: 20,
+                        }}
+                      >
+                        <a
+                          href={recall.Link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: "#2563eb",
+                            fontWeight: "bold",
+                            textDecoration:
+                              "none",
+                          }}
+                        >
+                          Open Official NHTSA
+                          Report →
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -408,6 +430,7 @@ const [loadingRecalls, setLoadingRecalls] =
               const newPage = page - 1;
 
               setPage(newPage);
+
               setSelectedRecall(null);
 
               fetchRecalls(search, newPage);
@@ -440,6 +463,7 @@ const [loadingRecalls, setLoadingRecalls] =
             const newPage = page + 1;
 
             setPage(newPage);
+
             setSelectedRecall(null);
 
             fetchRecalls(search, newPage);
