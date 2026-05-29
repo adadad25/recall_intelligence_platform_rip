@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Recall Intelligence Platform',
-  description: 'Enterprise Recall Analytics & Root Cause Intelligence',
+  description: 'Every Failure is a lesson learnt',
   openGraph: {
     images: [
       {
